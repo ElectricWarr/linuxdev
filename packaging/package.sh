@@ -27,8 +27,12 @@ mkdir "$release_dir"
 cp ../source/* "$release_dir"
 cp 'install.sh' "$release_dir"
 
+# Add a version file for reference
+echo "$release" > "$release_dir"'/release'
+
 # Package using makeself
 makeself "$release_dir" '../releases/linuxdev_'"$release"'.run' 'linuxdev v'"$release" './install.sh'
 
 # Cleanup
 rm -rf "$temp_dir"
+
