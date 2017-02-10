@@ -1,0 +1,157 @@
+# ==================================================
+# Linux Development Environment Controll
+# Version: 1.7.0
+# Author: Michael Warr
+# Requirements/Tested With:
+#   Docker 1.13 (installed natively - NOT Docker Machine)
+#   MacOS Sierra 10.12.3 (16D32)
+#   Bash 4.4.5
+# ==================================================
+
+# Variables
+operation="$1"
+optional_dir="$2"
+config_dir="$HOME/.linuxdev"
+mountpath_file="$config_dir"/mountpath
+
+# Functions
+print_usage () { cat <<EOF
+usage: linuxdev OPERATION
+
+  up [PATH]    Starts the linuxdev container with PATH mounted under "/mnt/host_files".
+               If PATH is not specified, uses current dir ("pwd -P").
+  attach       Opens an SSH connection to linuxdev. "exit" returns to normal prompt.
+               "attach" and "exit" can be reused while the container is running.
+  down         Closes the linuxdev environment.
+               This is required before PATH can be changed.
+  edit         Opens the current linuxdev Dockerfile in the default editor.
+
+EOF
+}
+
+readpath () {
+  # MacOS doesn't have the proper (GNU) implementation of 'readlink', so we have to improvise.
+  # This totally cheats by exploiting that 'pwd' DOES have a '-P' flag
+
+  # Variables
+  target_path="$1"
+
+  # File or Directory?
+  if [[ -d "$target_path" ]]; then
+    # Directory - jump to and return real path immediately
+    pushd "$target_path" >/dev/null
+    real_dir="$(pwd -P)"
+    real_path="$real_dir"
+  elif [[ -f "$target_path" ]]; then
+    # File - jump to the parent dir, get the real path, then add on the file name
+    pushd "$(dirname "$target_path")" >/dev/null
+    real_dir="$(pwd -P)"
+    real_path="$real_dir/$(basename "$target_path")"
+  else
+    # Not a file or dir? Meh.
+    echo 'Path invalid, please correct and try again.'
+    exit 1
+  fi
+
+  # Return to where we came from and print real path
+  popd >/dev/null
+  echo "$real_path"
+}
+
+set_relative_mount () {
+  # Exports 'Relative_Mount' based on user input (or lack thereof) and saves the value to a file
+  # Aborts if provided path is not valid
+  if [[ -z "$optional_dir" ]]; then
+    # $optional_dir is NOT set, or a blank value was passed
+    export Relative_Mount="$(pwd -P)"
+  elif [[ -d "$optional_dir" ]]; then
+    # $optional_dir is a valid directory
+    optional_dir_absolute="$(readpath "$optional_dir")"
+    export Relative_Mount="$optional_dir_absolute"
+  else
+    # $optional_dir doesn't exist
+    echo 'Provided mount does not refer to a valid directory - process aborted.'
+    exit 1
+  fi
+  # Save to config file
+  echo "$Relative_Mount" > "$mountpath_file"
+}
+
+get_relative_mount () {
+  # Exports the last known value of 'Relative_Mount' from the file written in 'set_relative_mount'
+  export Relative_Mount=$(cat "$mountpath_file")
+}
+
+get_entrypoint () {
+  # Reads the shell to execute from the Dockerfile
+  entrypoint_array=( $(grep 'ENTRYPOINT' "$config_dir/Dockerfile") )
+  entrypoint="${entrypoint_array[1]}" # Second element is the value >:D
+  echo "$entrypoint"
+}
+
+linuxdev_status () {
+  # Prints the current status of the 'linux_development' container
+  check="$(docker ps -q --filter 'name=linux_development')"
+  if [[ -z "$check" ]]; then
+    echo 'status: down'
+  else
+    echo 'status: up'
+  fi
+}
+
+linuxdev_up () {
+  # Spins up the 'linux_development' container
+  # Automatically also calls the 'attach' command
+  set_relative_mount
+  cd "$config_dir"
+  # Chaining commands so that (eg.) Ctrl+C will cause this to fail
+  docker-compose build >/dev/null && \
+  docker-compose up -d && \
+  linuxdev_attach
+}
+
+linuxdev_attach () {
+  # Opens an ssh session into the 'linux_development' container
+  docker exec -it linux_development "$(get_entrypoint)"
+}
+
+linuxdev_down () {
+  # Stops and removes the 'linux_development' container, to ensure a clean environment defined by dockerfile
+  get_relative_mount
+  cd "$config_dir"
+  # Kill is a bit too aggressive, and "force" skips interactive y/N prompts
+  docker-compose kill && \
+  docker-compose rm -f
+}
+
+linuxdev_edit () {
+  # Edit the current Dockerfile
+  vim "$config_dir/Dockerfile"
+}
+
+# Main - argument control
+case "$operation" in
+  status)
+    # Check the status of the Linux Development Environment
+    linuxdev_status
+  ;;
+  up)
+    # Start Linux Development Environment
+    linuxdev_up
+  ;;
+  attach)
+    # Enter Linux Development Environment
+    linuxdev_attach
+  ;;
+  down)
+    # Tear down Linux Development Environment
+    linuxdev_down
+  ;;
+  edit)
+    # Edit the Dockerfile
+    linuxdev_edit
+  ;;
+  *)
+    print_usage
+  ;;
+esac
