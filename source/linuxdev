@@ -1,6 +1,6 @@
 # ==================================================
 # Linux Development Environment Controll
-# Version: 1.7.0
+# Version: 1.8.0
 # Author: Michael Warr
 # Requirements/Tested With:
 #   Docker 1.13 (installed natively - NOT Docker Machine)

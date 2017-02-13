@@ -1,7 +1,7 @@
 # --------------------------
 # Script to install linuxdev
 # Author: Michael Warr
-# Version: 0.0.0
+# Version: 1.2.0
 # --------------------------
 
 # Functions

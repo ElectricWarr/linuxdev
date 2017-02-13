@@ -1,7 +1,7 @@
 # --------------------------
 # Script to package linuxdev
 # Author: Michael Warr
-# Version: 0.1.0
+# Version: 1.1.0
 # Requirements:
 #   makeself
 # --------------------------
