@@ -37,6 +37,6 @@ move_and_backup 'docker-compose.yml' "$linuxdev_dir"'/docker-compose.yml'
 move_and_backup 'linuxdev' "$linuxdev_dir"'/linuxdev'
 
 # Link to the linuxdev tool from somewhere already on the path **REQUIRES SUDO**
-ln -s "$linuxdev_dir/linuxdev" '/usr/local/bin/linuxdev'
+ln -fs "$linuxdev_dir/linuxdev" '/usr/local/bin/linuxdev'
 chmod 755 '/usr/local/bin/linuxdev'
 
