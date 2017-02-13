@@ -13,6 +13,7 @@ operation="$1"
 optional_dir="$2"
 config_dir="$HOME/.linuxdev"
 mountpath_file="$config_dir"/mountpath
+log_file="$config_dir"'/linuxdev.log'
 
 # Functions
 print_usage () { cat <<EOF
@@ -102,12 +103,21 @@ linuxdev_status () {
 linuxdev_up () {
   # Spins up the 'linux_development' container
   # Automatically also calls the 'attach' command
+  [[ -f "$mountpath_file" ]] && chck_mp=1 # Check for mountpath file (see below)
   set_relative_mount
   cd "$config_dir"
   # Chaining commands so that (eg.) Ctrl+C will cause this to fail
-  docker-compose build >/dev/null && \
-  docker-compose up -d && \
-  linuxdev_attach
+  # This will take a little extra time on the first run, so if the 'mountpath' file exists, hide the build output
+  if [[ "$chck_mp" -gt 0 ]]; then
+    docker-compose build >/dev/null && \
+    docker-compose up -d && \
+    linuxdev_attach
+  else
+    printf 'This may take some time on the first run...\n'
+    docker-compose build && \
+    docker-compose up -d && \
+    linuxdev_attach
+  fi
 }
 
 linuxdev_attach () {
