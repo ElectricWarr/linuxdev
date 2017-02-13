@@ -9,6 +9,7 @@ LABEL Name="LinuxDev" \
 # Update packages and install sudo
 RUN yum -y update && \
     yum -y install sudo && \
+    yum -y install git && \
     yum clean all
 
 # Install Python 3 via IUS, and link python3  & pip3 -> python3.6 & pip3.6
