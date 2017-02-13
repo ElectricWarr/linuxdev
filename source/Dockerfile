@@ -11,6 +11,14 @@ RUN yum -y update && \
     yum -y install sudo && \
     yum clean all
 
+# Install Python 3 via IUS, and link python3  & pip3 -> python3.6 & pip3.6
+RUN yum -y update && \
+    yum -y install https://centos7.iuscommunity.org/ius-release.rpm && \
+    yum -y install python36u python36u-pip && \
+    yum clean all
+RUN ln -s '/usr/bin/python3.6' '/usr/bin/python3' && \
+    ln -s '/usr/bin/pip3.6' '/usr/bin/pip3'
+
 # Group 'wheel' should be able to sudo without a password (as no-one has one)
 # Editing sudoers with sed, hashtag YOLO!
 RUN sed -i 's/^%wheel/#(Edited!) %wheel/' '/etc/sudoers' && sed -i 's/^# %wheel/%wheel/' '/etc/sudoers'
