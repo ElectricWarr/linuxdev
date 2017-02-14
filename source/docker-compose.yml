@@ -3,9 +3,9 @@ version: '3'
 services:
   linuxdev:
     build: .
-    image: devenv:linuxdev
-    container_name: linux_development
-    hostname: linux_development
+    image: linuxdev:centos_bash
+    container_name: linuxdev
+    hostname: linuxdev
     volumes:
       - ${Relative_Mount}:/mnt/host_files
     stdin_open: true

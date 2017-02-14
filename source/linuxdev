@@ -1,6 +1,6 @@
 # ==================================================
 # Linux Development Environment Controll
-# Version: 1.8.0
+# Version: 1.8.1
 # Author: Michael Warr
 # Requirements/Tested With:
 #   Docker 1.13 (installed natively - NOT Docker Machine)
@@ -13,7 +13,7 @@ operation="$1"
 optional_dir="$2"
 config_dir="$HOME/.linuxdev"
 mountpath_file="$config_dir"/mountpath
-log_file="$config_dir"'/linuxdev.log'
+container_name='linuxdev'
 
 # Functions
 print_usage () { cat <<EOF
@@ -91,8 +91,8 @@ get_entrypoint () {
 }
 
 linuxdev_status () {
-  # Prints the current status of the 'linux_development' container
-  check="$(docker ps -q --filter 'name=linux_development')"
+  # Prints the current status of the linuxdev container
+  check="$(docker ps -q --filter 'name='"$container_name")"
   if [[ -z "$check" ]]; then
     echo 'status: down'
   else
@@ -101,7 +101,7 @@ linuxdev_status () {
 }
 
 linuxdev_up () {
-  # Spins up the 'linux_development' container
+  # Spins up the linuxdev container
   # Automatically also calls the 'attach' command
   [[ -f "$mountpath_file" ]] && chck_mp=1 # Check for mountpath file (see below)
   set_relative_mount
@@ -121,12 +121,12 @@ linuxdev_up () {
 }
 
 linuxdev_attach () {
-  # Opens an ssh session into the 'linux_development' container
-  docker exec -it linux_development "$(get_entrypoint)"
+  # Opens an ssh session into the linuxdev container
+  docker exec -it "$container_name" "$(get_entrypoint)"
 }
 
 linuxdev_down () {
-  # Stops and removes the 'linux_development' container, to ensure a clean environment defined by dockerfile
+  # Stops and removes the linuxdev container, to ensure a clean environment defined by dockerfile
   get_relative_mount
   cd "$config_dir"
   # Kill is a bit too aggressive, and "force" skips interactive y/N prompts
